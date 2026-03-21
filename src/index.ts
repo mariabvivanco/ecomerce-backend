@@ -6,4 +6,7 @@ const PORT = Number(env.PORT)
 
 app.listen(PORT, () => {
   console.info(`Server running on port ${PORT}`)
+  console.info(`NODE_ENV: ${process.env.NODE_ENV}`)
+  console.info(`DATABASE_URL set: ${Boolean(process.env.DATABASE_URL)}`)
+  console.info(`FRONTEND_URL: ${process.env.FRONTEND_URL}`)
 })
