@@ -2,12 +2,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@prisma/client'
 
 function createPrismaClient(): PrismaClient {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { Pool } = require('pg')
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-  // type cast needed: @prisma/adapter-pg bundles its own @types/pg version
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adapter = new PrismaPg(pool as any)
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL as string })
   return new PrismaClient({ adapter })
 }
 

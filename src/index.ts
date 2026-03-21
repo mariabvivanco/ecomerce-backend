@@ -2,6 +2,16 @@ import 'dotenv/config'
 import { env } from './lib/env'
 import { app } from './app'
 
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err)
+  process.exit(1)
+})
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason)
+  process.exit(1)
+})
+
 const PORT = Number(env.PORT)
 
 app.listen(PORT, () => {
