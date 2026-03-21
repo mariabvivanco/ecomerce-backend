@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { type NextFunction, type Request, type Response } from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import cookieParser from 'cookie-parser'
@@ -22,5 +22,11 @@ app.use('/api/products', productRouter)
 app.use('/api/categories', categoryRouter)
 app.use('/api/orders', orderRouter)
 app.use('/api/customers', customerRouter)
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error(err.stack)
+  res.status(500).json({ error: 'Internal server error' })
+})
 
 export { app }
