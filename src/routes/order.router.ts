@@ -4,7 +4,7 @@ import { createHandler, captureHandler, listHandler, detailHandler } from '../co
 
 export const orderRouter = Router()
 
-orderRouter.post('/', createHandler)
+orderRouter.post('/', authMiddleware, createHandler)
 orderRouter.post('/:id/capture', captureHandler)
 orderRouter.get('/', authMiddleware, listHandler)
-orderRouter.get('/:id', detailHandler)
+orderRouter.get('/:id', authMiddleware, detailHandler)

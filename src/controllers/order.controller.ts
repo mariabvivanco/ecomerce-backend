@@ -38,7 +38,7 @@ export async function captureHandler(req: Request, res: Response): Promise<void>
   }
 }
 
-export async function listHandler(req: Request, res: Response): Promise<void> {
+export async function listHandler(_req: Request, res: Response): Promise<void> {
   const userId = res.locals.userId as string
   const orders = await orderService.listByUser(userId)
   res.json({ items: orders })
@@ -46,7 +46,7 @@ export async function listHandler(req: Request, res: Response): Promise<void> {
 
 export async function detailHandler(req: Request, res: Response): Promise<void> {
   try {
-    const userId = res.locals.userId as string | undefined
+    const userId = res.locals.userId as string
     const order = await orderService.getById(String(req.params.id), userId)
     res.json(order)
   } catch (err) {

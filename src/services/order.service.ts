@@ -82,12 +82,13 @@ export async function listByUser(userId: string) {
   })
 }
 
-export async function getById(orderId: string, userId?: string) {
+export async function getById(orderId: string, userId: string) {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    select: ORDER_SELECT,
+    select: { ...ORDER_SELECT, userId: true },
   })
   if (!order) throw new Error('NOT_FOUND')
-  if (userId && (order as { userId?: string }).userId !== userId) throw new Error('FORBIDDEN')
-  return order
+  if (order.userId !== userId) throw new Error('FORBIDDEN')
+  const { userId: _, ...safeOrder } = order
+  return safeOrder
 }

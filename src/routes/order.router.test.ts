@@ -46,18 +46,12 @@ async function registerAndLogin() {
 }
 
 describe('POST /api/orders', () => {
-  it('creates an order as guest', async () => {
-    const productId = await getFirstProductId()
-    const payload = validPayload()
-    payload.items[0].productId = productId
-
-    const res = await request(app).post('/api/orders').send(payload)
-    expect(res.status).toBe(201)
-    expect(res.body.order.status).toBe('PENDING')
-    expect(res.body.paypalOrderId).toBe('PAYPAL-ORDER-123')
+  it('returns 401 without auth', async () => {
+    const res = await request(app).post('/api/orders').send(validPayload())
+    expect(res.status).toBe(401)
   })
 
-  it('creates an order as authenticated user', async () => {
+  it('creates an order when authenticated', async () => {
     const productId = await getFirstProductId()
     const payload = validPayload()
     payload.items[0].productId = productId
@@ -68,30 +62,33 @@ describe('POST /api/orders', () => {
       .set('Cookie', cookies)
       .send(payload)
     expect(res.status).toBe(201)
-    expect(res.body.order.email).toBe(payload.billing.email)
+    expect(res.body.order.status).toBe('PENDING')
+    expect(res.body.paypalOrderId).toBe('PAYPAL-ORDER-123')
   })
 
   it('returns 400 for missing fields', async () => {
-    const res = await request(app).post('/api/orders').send({ items: [] })
+    const cookies = await registerAndLogin()
+    const res = await request(app).post('/api/orders').set('Cookie', cookies).send({ items: [] })
     expect(res.status).toBe(400)
   })
 
   it('returns 404 for unknown product', async () => {
+    const cookies = await registerAndLogin()
     const payload = validPayload()
     payload.items[0].productId = '00000000-0000-0000-0000-000000000000'
-
-    const res = await request(app).post('/api/orders').send(payload)
+    const res = await request(app).post('/api/orders').set('Cookie', cookies).send(payload)
     expect(res.status).toBe(404)
   })
 })
 
 describe('POST /api/orders/:id/capture', () => {
   it('captures a pending order', async () => {
+    const cookies = await registerAndLogin()
     const productId = await getFirstProductId()
     const payload = validPayload()
     payload.items[0].productId = productId
 
-    const { body: created } = await request(app).post('/api/orders').send(payload)
+    const { body: created } = await request(app).post('/api/orders').set('Cookie', cookies).send(payload)
     const orderId = created.order.id
 
     const res = await request(app).post(`/api/orders/${orderId}/capture`)
@@ -100,11 +97,12 @@ describe('POST /api/orders/:id/capture', () => {
   })
 
   it('returns 409 when order already processed', async () => {
+    const cookies = await registerAndLogin()
     const productId = await getFirstProductId()
     const payload = validPayload()
     payload.items[0].productId = productId
 
-    const { body: created } = await request(app).post('/api/orders').send(payload)
+    const { body: created } = await request(app).post('/api/orders').set('Cookie', cookies).send(payload)
     const orderId = created.order.id
 
     await request(app).post(`/api/orders/${orderId}/capture`)
@@ -135,21 +133,25 @@ describe('GET /api/orders', () => {
 })
 
 describe('GET /api/orders/:id', () => {
-  it('returns order detail', async () => {
+  it('returns order detail for authenticated owner', async () => {
+    const cookies = await registerAndLogin()
     const productId = await getFirstProductId()
     const payload = validPayload()
     payload.items[0].productId = productId
 
-    const { body: created } = await request(app).post('/api/orders').send(payload)
+    const { body: created } = await request(app)
+      .post('/api/orders')
+      .set('Cookie', cookies)
+      .send(payload)
     const orderId = created.order.id
 
-    const res = await request(app).get(`/api/orders/${orderId}`)
+    const res = await request(app).get(`/api/orders/${orderId}`).set('Cookie', cookies)
     expect(res.status).toBe(200)
     expect(res.body.id).toBe(orderId)
   })
 
-  it('returns 404 for unknown order', async () => {
+  it('returns 401 when not authenticated', async () => {
     const res = await request(app).get('/api/orders/00000000-0000-0000-0000-000000000000')
-    expect(res.status).toBe(404)
+    expect(res.status).toBe(401)
   })
 })
